@@ -13,7 +13,7 @@ char *host_table[128] = {
 
     /* Put your host names here */
     "chenyanli-virtual-machine",
-    
+    "kans_y9000p",
     0 /* The zero terminates the list */
 };
 
