@@ -30,7 +30,7 @@ LABID = f12
 #
 # Default result server name and port (not needed for non-notifying bombs)
 # 
-SERVERNAME = 192.168.86.128
+SERVERNAME = 127.0.0.1
 SERVERPORT = 15214
 
 #
