@@ -66,6 +66,33 @@ my $verbose = 0;
 system("rm -f tmp-solution.*") == 0
     or log_msg("Unable to remove temp files");
 
+use Text::CSV;
+
+# 读取学生名单CSV并返回哈希表
+sub load_student_info {
+    my $filename = 'name_list.csv'; # 假设CSV文件名为name_list.csv
+    my %students = ();
+
+    my $csv = Text::CSV->new({ binary => 1 });
+    open my $fh, '<', $filename or die "Cannot open $filename: $!";
+
+    while (my $row = $csv->getline($fh)) {
+        my ($student_id, $student_name, $teacher_name, $class_id) = @$row;
+        $students{$student_id} = {
+            name => $student_name,
+            teacher => $teacher_name,
+            class => $class_id,
+        };
+    }
+
+    close $fh;
+    return %students;
+}
+
+# 在主代码中加载学生信息
+my %STUDENT_INFO = load_student_info();
+
+
 #
 # Scan the log file and store a complete record for each bomb in the
 # RESULTS hash.
@@ -76,8 +103,10 @@ system("rm -f tmp-solution.*") == 0
 # Open the temporary output Web page
 # 
 
-open(WEB, ">$tmpwebpage") 
+open(WEB, ">:encoding(UTF-8)", $tmpwebpage) 
     or log_die("Unable to open $tmpwebpage: $!");
+
+use open ':std', ':encoding(UTF-8)';
 
 # Initialize some statistics variables
 $bombcount = 0;                         
@@ -100,28 +129,21 @@ for ($i=0; $i <= $Bomblab::NUMPHASES+1; $i++) {
 # Results{}[4] contains time of last phase pass.
 #
 print_webpage_header();
-foreach $bombid (sort {$RESULTS{$b}[2] <=> $RESULTS{$a}[2] ||
-                           $RESULTS{$a}[3] <=> $RESULTS{$b}[3] ||
-                           $RESULTS{$a}[4] <=> $RESULTS{$b}[4] ||
-                           $a <=> $b}
-                 keys %RESULTS) {
-
-    if ($verbose) {
-        print "Bomb$bombid...";
-    }
-
-    if ($bombid eq "") {
-        next;
-    }
-
-
+foreach $bombid (sort { 
+    $RESULTS{$b}[2] <=> $RESULTS{$a}[2] ||   # 按照解锁的阶段数降序排列
+    $RESULTS{$a}[3] <=> $RESULTS{$b}[3] ||   # 如果阶段数相同，按爆炸次数升序排列
+    $RESULTS{$a}[4] <=> $RESULTS{$b}[4] ||   # 如果爆炸次数相同，按时间升序排列
+    $a <=> $b                                # 如果时间相同，按bombid升序排列
+} keys %RESULTS) {
+    # 获取学生信息
+    my $student_id = $RESULTS{$bombid}[0];
+    my $student_info = $STUDENT_INFO{$student_id} || { name => 'Unknown', class => 'Unknown', teacher => 'Unknown' };
     #
     # Extract the results for this bomb from the results hash
     #
     $numdefused = $RESULTS{$bombid}[2];
     $numexplosions = $RESULTS{$bombid}[3];
     $defusedate = short_date($RESULTS{$bombid}[4]);
-
     #
     # Make sure all the input files we need exist and are accessible
     # Notice that we're validating with the quiet (non-notifying version) 
@@ -137,7 +159,7 @@ foreach $bombid (sort {$RESULTS{$b}[2] <=> $RESULTS{$a}[2] ||
         log_msg("Couldn't execute $bombfile");
         next;
     }
-
+    
     # 
     # Copy the defusing strings to a separate array for convenience
     #
@@ -189,25 +211,22 @@ foreach $bombid (sort {$RESULTS{$b}[2] <=> $RESULTS{$a}[2] ||
         my $invalid_phase = $numdefused+1;
         $comment = "<font color=ff0000><b>invalid phase $invalid_phase</b></font>";
     }
-
-    print WEB "<tr bgcolor=$Bomblab::LIGHT_GREY align=center>\n";
+    # 生成表格行，包含班级和老师信息的data属性
+    print WEB "<tr data-class=\"$student_info->{class}\" data-teacher=\"$student_info->{teacher}\" bgcolor=$Bomblab::LIGHT_GREY align=center>\n";
     print WEB "<td align=center>$bf $bombcount</td>\n"; 
-    print WEB "<td align=left> $bf bomb$bombid $ef</td>";  # bomb number 
-    print WEB "<td align=left>$bf $defusedate$ef </td>\n"; # defusion date
-
-    # Report the score based on the largest validated defused phase
-    print WEB "<td align=center> $bf $RESULTS{$bombid}[2] $ef</td>";   # defused
-    print WEB "<td align=center> $bf $RESULTS{$bombid}[3] $ef</td>";   # exploded
-    print WEB "<td align=center> $bf $score $ef</td>";   # lab score
-    print WEB "<td align=center> $bf $comment $ef </td>\n";  # valid/invalid
+    print WEB "<td align=left> $bf bomb$bombid $ef</td>"; 
+    print WEB "<td align=left>$bf $defusedate$ef </td>\n"; 
+    print WEB "<td align=center> $bf $RESULTS{$bombid}[2] $ef</td>";
+    print WEB "<td align=center> $bf $RESULTS{$bombid}[3] $ef</td>";
+    print WEB "<td align=center> $bf $score $ef</td>";
+    print WEB "<td align=center> $bf $comment $ef </td>\n";
+    print WEB "<td align=center> $bf $student_info->{name} $ef </td>\n";
+    print WEB "<td align=center> $bf $student_info->{class} $ef </td>\n";
+    print WEB "<td align=center> $bf $student_info->{teacher} $ef </td>\n";
     print WEB "</tr>\n";
+}
 
-    # Terminate the status line in verbose mode
-    if ($verbose) {
-        print "\n";
-    }
 
-} #end iteration over each bombid
 
 #
 # Print the page epilogue information
@@ -523,42 +542,163 @@ sub usage
 #
 sub print_webpage_header {
     my $title = "Bomb Lab Scoreboard";
-
     $headerhtml = "bgcolor=$Bomblab::DARK_GREY align=center";
 
     print WEB <<"EOF";
     <html>
     <head>
+    <meta charset="UTF-8">
     <title>$title</title>
-    </head>
-    <body bgcolor=ffffff>
+    <style>
+        /* 页面总体样式 */
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            color: #333;
+            margin: 0;
+            padding: 20px;
+        }
 
+        h2 {
+            color: #2c3e50;
+            text-align: center;
+        }
+
+        /* 筛选器样式 */
+        #filter {
+            margin: 20px auto;
+            max-width: 600px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        #filter label {
+            font-weight: bold;
+            margin-right: 5px;
+        }
+
+        #filter select, #search-input {
+            padding: 8px;
+            font-size: 14px;
+        }
+
+        /* 表格样式 */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            margin-top: 20px;
+        }
+
+        th {
+            background-color: #34495e;
+            color: #ffffff;
+            padding: 10px;
+        }
+
+        td {
+            padding: 10px;
+            border: 1px solid #ddd;
+            text-align: center;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+
+        tr:hover {
+            background-color: #f1f1f1;
+        }
+
+        /* 状态样式 */
+        .valid { color: #2ecc71; font-weight: bold; }
+        .invalid { color: #e74c3c; font-weight: bold; }
+    </style>
+    <script>
+        // 筛选和搜索功能
+        function filterTable() {
+            const classFilter = document.getElementById('class-filter').value;
+            const teacherFilter = document.getElementById('teacher-filter').value;
+            const searchQuery = document.getElementById('search-input').value.toLowerCase();
+            const rows = document.querySelectorAll('#scoreboard-table tr:not(.header)');
+
+            rows.forEach(row => {
+                const classMatch = classFilter === '' || row.dataset.class === classFilter;
+                const teacherMatch = teacherFilter === '' || row.dataset.teacher === teacherFilter;
+                const searchMatch = row.innerText.toLowerCase().includes(searchQuery);
+              h  row.style.display = (classMatch && teacherMatch && searchMatch) ? '' : 'none';
+            });
+        }
+
+        // 自动更新时间
+        function updateTime() {
+            const now = new Date();
+            document.getElementById('update-time').innerText = 'Last updated: ' + now.toLocaleString();
+        }
+        setInterval(updateTime, 60000);  // 每分钟更新一次
+    </script>
+    </head>
+    <body onload="updateTime()">
     <h2>$title</h2>
-    <p>
-    <table width=500><tr><td>
-    This page contains the latest information
-    that we have received from your bomb. If your solution is marked 
-    <font color=ff0000><b>invalid</b></font>, 
-    this means your bomb reported a solution that didn't actually defuse your bomb.
-</td></tr></table>
+    <p id="update-time">Last updated: @{[ scalar localtime ]}</p>
+
+    <!-- 筛选器和搜索框 -->
+    <div id="filter">
+        <div>
+            <label for="class-filter">Class:</label>
+            <select id="class-filter" onchange="filterTable()">
+                <option value="">All</option>
 EOF
 
-print WEB "<p>Last updated: ", scalar localtime, " (updated every $Bomblab::UPDATE_PERIOD secs)<br>\n";
+    # 动态生成班级选项
+    my %classes = map { $_->{class} => 1 } values %STUDENT_INFO;
+    foreach my $class (sort keys %classes) {
+        print WEB "<option value=\"$class\">$class</option>\n";
+    }
 
-print WEB "
-<p>
-<table border=0 cellspacing=1 cellpadding=1>
-<tr bgcolor=$Bomblab::DARK_GREY align=center>
-<th align=center> # </th> 
-<th align=center, width=90>  Bomb number</th>
-<th align=center, width=$Bomblab::WIDTH_SHORTDATE>Submission date</th>
-<th align=center, width=80>Phases defused</th>
-<th align=center, width=80>Explosions</th>
-<th align=center, width=80>Score</th>
-<th >Status</th>
-</tr>
-";
+    print WEB <<"EOF";
+            </select>
+        </div>
+        <div>
+            <label for="teacher-filter">Teacher:</label>
+            <select id="teacher-filter" onchange="filterTable()">
+                <option value="">All</option>
+EOF
+
+    # 动态生成老师选项
+    my %teachers = map { $_->{teacher} => 1 } values %STUDENT_INFO;
+    foreach my $teacher (sort keys %teachers) {
+        print WEB "<option value=\"$teacher\">$teacher</option>\n";
+    }
+
+    print WEB <<"EOF";
+            </select>
+        </div>
+        <div>
+            <label for="search-input">Search:</label>
+            <input type="text" id="search-input" onkeyup="filterTable()" placeholder="Search by name...">
+        </div>
+    </div>
+
+    <!-- 结果表格 -->
+    <table id="scoreboard-table">
+        <tr class="header">
+            <th>#</th>
+            <th>Bomb Number</th>
+            <th>Submission Date</th>
+            <th>Phases Defused</th>
+            <th>Explosions</th>
+            <th>Score</th>
+            <th>Status</th>
+            <th>Student</th>
+            <th>Class</th>
+            <th>Teacher</th>
+        </tr>
+EOF
 }
+
+
 
 
 	       
