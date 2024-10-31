@@ -1,0 +1,13 @@
+Sun Oct 27 17:19:21 2024:bomblab.pl:Bomblab daemon started on chenyanli-virtual-machine
+Sun Oct 27 17:19:21 2024:bomblab.pl:Found duplicate bomblab.pl (pid=4859). Killing it.
+Sun Oct 27 17:19:21 2024:bomblab.pl:Detected 0 instances of bomblab-requestd.pl
+Sun Oct 27 17:19:21 2024:bomblab.pl:Restarting bomblab-requestd.pl.
+Sun Oct 27 17:19:21 2024:bomblab.pl:Detected 0 instances of bomblab-resultd.pl
+Sun Oct 27 17:19:21 2024:bomblab.pl:Restarting bomblab-resultd.pl.
+Sun Oct 27 17:19:21 2024:bomblab.pl:Detected 0 instances of bomblab-reportd.pl
+Sun Oct 27 17:19:21 2024:bomblab.pl:Restarting bomblab-reportd.pl.
+Sun Oct 27 17:19:21 2024:bomblab-requestd.pl:Request server started on 192.168.86.128:15213
+Sun Oct 27 17:19:21 2024:bomblab-resultd.pl:Results server started on chenyanli-virtual-machine:15214
+Sun Oct 27 17:19:53 2024:bomblab-requestd.pl:Invalid bomb request from chenyanli-virtual-machine: Invalid email address (444):
+Sun Oct 27 17:20:07 2024:bomblab-requestd.pl:Bomb request from chenyanli-virtual-machine:1234:1234@njupt.edu.cn:
+Sun Oct 27 17:20:08 2024:bomblab-requestd.pl:Sent bomb 1 to chenyanli-virtual-machine:1234:1234@njupt.edu.cn:

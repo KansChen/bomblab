@@ -24,25 +24,6 @@ on stdin.  If the student enters the expected string, then that phase
 is "defused."  Otherwise the bomb "explodes" by printing "BOOM!!!".
 The goal for the students is to defuse as many phases as possible.
 
-Each bomb phase tests a different aspect of machine language programs:
-  Phase 1: string comparison
-  Phase 2: loops
-  Phase 3: conditionals/switches
-  Phase 4: recursive calls and the stack discipline
-  Phase 5: pointers
-  Phase 6: linked lists/pointers/structs
-
-Phases get progressively harder. There is also a "secret phase" that
-only appears if students append a certain string to the solution to
-Phase 4. 
-
-Each phase has three variants: "a", "b", and "c". Each student gets a
-bomb with a randomly chosen variant for each phase.  In addition, most
-phase variants are parameterized by randomly chosen constants that are
-assigned when a particular bomb is constructed.  Thus, each student
-gets a unique bomb that they must solve themselves.  The unique
-solution to each bomb is available to the instructor.
-
 ----
 1.2. Solving Binary Bombs
 ----
@@ -465,19 +446,7 @@ by hand by running their custom bomb against their solution:
     linux> cd ./bombs/bomb<n>
     linux> ./bomb < student_n_solution.txt
 
-For both Option 1 and Option 2, the makebomb.pl script randomly
-chooses the variant ("a", "b", or "c") for each phase. You can tell
-makebomb.pl to use a specific variant by using the "-p" option. For
-example, "-p abacba" will use variant "a" for phase 1, variant "b" for
-phase 2, variant "a" for phase 3, variant "c" for phase 4, and so on.
-
 The source code for the different phase variants is in ./src/phases/.
-
-*****************************
-5. Frequently Asked Questions
-*****************************
-Q. Is there any extra credit for solving the secret phase?
-A. What secret phase? :-)
 
 
 
