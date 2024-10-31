@@ -428,45 +428,94 @@ sub usage
 # The user* fields define the default values for the HTML form fields. 
 # The errmsg is optional and informs users about input mistakes.
 #
-sub buildform 
-{
+sub buildform {
     my $hostname = $_[0];
     my $port = $_[1];
     my $labid = $_[2];
     my $usermail = $_[3];
     my $username = $_[4];
     my $errmsg = $_[5];
+    
     my $form = "";
-    $form .= "<html><title>CS:APP Binary Bomb Request</title>\n";
-    $form .= "<body bgcolor=white>\n";
-    $form .= "<h2>CS:APP Binary Bomb Request</h2>\n";
-    $form .= "<p>Fill in the form and then click the Submit button.</p>\n";
-    $form .= "<p>Hit the Reset button to get a clean form.</p>\n";
-    $form .= "<p>Legal characters are spaces, letters, numbers, underscores ('_'),<br>";
-    $form .= "hyphens ('-'), at signs ('\@'), and dots ('.').</p>\n";
-    $form .= "<form action=http://$hostname:$port method=get>\n";
-    $form .= "<table>\n";
-    $form .= "<tr>\n";
-    $form .= "<td><b>User name</b><br><font size=-1><i>$Bomblab::USERNAME_HINT&nbsp;</i></font></td>\n";
-    $form .= "<td><input type=text size=$Bomblab::MAX_TEXTBOX maxlength=$Bomblab::MAX_TEXTBOX name=username value=\"$username\"></td>\n";
-    $form .= "</tr>\n";
-    $form .= "<tr>\n";
-    $form .= "<td><b>Email address</b></td>\n";
-    $form .= "<td><input type=text size=$Bomblab::MAX_TEXTBOX maxlength=$Bomblab::MAX_TEXTBOX name=usermail value=\"$usermail\"></td>\n";
-    $form .= "</tr>\n";
-    $form .= "<tr><td>&nbsp;</td></tr>\n";
-    $form .= "<tr>\n";
-    $form .= "<td><input type=submit name=submit value=\"Submit\"></td>\n";
-    $form .= "<td><input type=submit name=reset value=\"Reset\"></td>\n";
-    $form .= "</tr>\n";
-    $form .= "</table></form>\n";
+    $form .= "<!DOCTYPE html>\n";
+    $form .= "<html lang=\"en\">\n";
+    $form .= "<head>\n";
+    $form .= "    <meta charset=\"UTF-8\">\n";
+    $form .= "    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n";
+    $form .= "    <title>CS:APP Binary Bomb Request</title>\n";
+    
+    # CSS样式
+    $form .= "    <style>\n";
+    $form .= "        body { font-family: Arial, sans-serif; background-color: #f4f4f9; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; color: #333; }\n";
+    $form .= "        .container { background: #fff; border-radius: 8px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); padding: 20px; max-width: 400px; width: 100%; text-align: center; }\n";
+    $form .= "        h2 { margin-bottom: 16px; color: #007bff; }\n";
+    $form .= "        p { font-size: 0.9em; color: #555; }\n";
+    $form .= "        form { display: flex; flex-direction: column; }\n";
+    $form .= "        label { font-weight: bold; margin-top: 12px; text-align: left; }\n";
+    $form .= "        input[type=\"text\"], input[type=\"email\"] { padding: 8px; font-size: 1em; border: 1px solid #ddd; border-radius: 4px; margin-top: 4px; transition: border-color 0.3s; }\n";
+    $form .= "        input[type=\"text\"]:focus, input[type=\"email\"]:focus { border-color: #007bff; }\n";
+    $form .= "        .buttons { display: flex; justify-content: space-between; margin-top: 16px; }\n";
+    $form .= "        .buttons input[type=\"submit\"] { background-color: #007bff; color: white; padding: 10px; border: none; border-radius: 4px; cursor: pointer; transition: background-color 0.3s; }\n";
+    $form .= "        .buttons input[type=\"submit\"]:hover { background-color: #0056b3; }\n";
+    $form .= "        .error-message { font-weight: bold; color: #555555; font-size: 0.9em; margin-top: 10px; }\n";
+    $form .= "        .lang-toggle { margin-top: 10px; cursor: pointer; color: #007bff; }\n";
+    $form .= "    </style>\n";
+
+    # JavaScript切换语言
+    $form .= "    <script>\n";
+    $form .= "        let isEnglish = true;\n";
+    $form .= "        function toggleLanguage() {\n";
+    $form .= "            isEnglish = !isEnglish;\n";
+    $form .= "            document.getElementById('title').textContent = isEnglish ? 'CS:APP Binary Bomb Request' : 'CS:APP Binary Bomb Request';\n";
+    $form .= "            document.getElementById('instruction').textContent = isEnglish ? 'Please fill out this form to request a binary bomb.' : '请填写此表格申请Binary Bomb。';\n";
+    $form .= "            document.getElementById('allowed-chars').textContent = isEnglish ? 'Only letters, numbers, underscores (_), hyphens (-), at signs (@), and dots (.) are allowed.' : '只允许使用字母、数字、下划线 (_)、连字符 (-)、符号 (@) 和点 (.)。';\n";
+    $form .= "            document.getElementById('username-label').textContent = isEnglish ? 'User Name' : '用户名';\n";
+    $form .= "            document.getElementById('usermail-label').textContent = isEnglish ? 'Email Address' : '电子邮箱地址';\n";
+    $form .= "            document.getElementById('submit-button').value = isEnglish ? 'Submit' : '提交';\n";
+    $form .= "            document.getElementById('reset-button').value = isEnglish ? 'Reset' : '重置';\n";
+    $form .= "            document.getElementById('error-message').textContent = isEnglish ? 'Error message goes here if needed.' : '如果需要，错误信息将显示在此处。';\n";
+    $form .= "            document.getElementById('lang-toggle').textContent = isEnglish ? 'Switch to Chinese' : '切换到英语';\n";
+    $form .= "        }\n";
+    $form .= "    </script>\n";
+    
+    $form .= "</head>\n";
+    $form .= "<body>\n";
+
+    # 表单内容
+    $form .= "    <div class=\"container\">\n";
+    $form .= "        <h2 id=\"title\">CS:APP Binary Bomb Request</h2>\n";
+    $form .= "        <p id=\"instruction\">Please fill out this form to request a binary bomb.</p>\n";
+    $form .= "        <p id=\"allowed-chars\">Only letters, numbers, underscores (_), hyphens (-), at signs (@), and dots (.) are allowed.</p>\n";
+    $form .= "        <form action=\"http://$hostname:$port\" method=\"get\">\n";
+    
+    $form .= "            <label id=\"username-label\" for=\"username\">User Name</label>\n";
+    $form .= "            <input type=\"text\" id=\"username\" name=\"username\" maxlength=\"50\" value=\"$username\" required>\n";
+    
+    $form .= "            <label id=\"usermail-label\" for=\"usermail\">Email Address</label>\n";
+    $form .= "            <input type=\"email\" id=\"usermail\" name=\"usermail\" maxlength=\"50\" value=\"$usermail\" required>\n";
+    
+    $form .= "            <div class=\"buttons\">\n";
+    $form .= "                <input type=\"submit\" id=\"submit-button\" name=\"submit\" value=\"Submit\">\n";
+    $form .= "                <input type=\"reset\" id=\"reset-button\" name=\"reset\" value=\"Reset\">\n";
+    $form .= "            </div>\n";
+    $form .= "        </form>\n";
+
+    # 错误消息
     if ($errmsg and $errmsg ne "") {
-        $form .= "<p><font color=red><b>$errmsg</b></font><p>\n";
+        $form .= "        <div class=\"error-message\" id=\"error-message\"><p><b>$errmsg</b></p></div>\n";
+    } else {
+        $form .= "        <div class=\"error-message\" id=\"error-message\">Error message goes here if needed.</div>\n";
     }
-    $form .= "</body></html>\n";
+
+    # 切换语言按钮
+    $form .= "        <p id=\"lang-toggle\" class=\"lang-toggle\" onclick=\"toggleLanguage()\">Switch to Chinese</p>\n";
+
+    $form .= "    </div>\n";
+    $form .= "</body>\n";
+    $form .= "</html>\n";
+    
     return $form;
 }
-
 #
 # void sendform(char *form) - Sends a form to the client   
 #
