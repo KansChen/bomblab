@@ -38,7 +38,7 @@ $LABID = "f12";
 # What is the name of the host that the bomblab servers and daemons
 # are running on? Note that you don't need root access to run the
 # bomblab.  Any Linux desktop will do.
-$SERVER_NAME = "192.168.86.128";
+$SERVER_NAME = "127.0.0.1";
 
 # What is the penalty for exploding a notifying bomb? At CMU, we impose
 # a penalty of 0.5 points per explosion.
