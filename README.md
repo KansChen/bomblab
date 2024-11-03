@@ -4,6 +4,19 @@
 
 题目描述：针对《计算机系统基础》课程炸弹程序存在问题，进行程序升级，方便教师对学生的炸弹实验情况及时进行监督和管理。
 
+# Deployments
+开发者的环境
+
+环境：Windows 11的Windows Subsystem for Linux 2
+
+OS：Ubuntu 22.04
+
+CPU：Intel x86-64
+
+推荐安装`build-essential`，以及perl的`Text::CSV`。
+
+需要在pm中加入自己的`hostname`。
+
 ## 基本要求
 
 (1)编写程序使教师可以及时通过页面查询班上学生的实验进展情况；   
