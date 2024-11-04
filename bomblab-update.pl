@@ -627,7 +627,7 @@ sub print_webpage_header {
                 const classMatch = classFilter === '' || row.dataset.class === classFilter;
                 const teacherMatch = teacherFilter === '' || row.dataset.teacher === teacherFilter;
                 const searchMatch = row.innerText.toLowerCase().includes(searchQuery);
-              h  row.style.display = (classMatch && teacherMatch && searchMatch) ? '' : 'none';
+                row.style.display = (classMatch && teacherMatch && searchMatch) ? '' : 'none';
             });
         }
 
