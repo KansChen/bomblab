@@ -59,6 +59,7 @@ my $explosion_penalty = $Bomblab::EXPLOSION_PENALTY;
 my $do_validate = 1;
 my $lab = "bomblab";
 my $verbose = 0;
+my $student_ID;
 
 #
 # Remove any leftover temp files 
@@ -66,34 +67,30 @@ my $verbose = 0;
 system("rm -f tmp-solution.*") == 0
     or log_msg("Unable to remove temp files");
 
+#读取学生名单CSV并返回哈希表
 use Text::CSV;
-
-# 读取学生名单CSV并返回哈希表
 sub load_student_info {
     my $filename = 'name_list.csv'; # 假设CSV文件名为name_list.csv
-    my %students = ();
-
-    my $csv = Text::CSV->new({ binary => 1 });
-    open my $fh, '<', $filename or die "Cannot open $filename: $!";
-
+    my %students = ();  # 初始化一个空的哈希表，用于存储学生信息
+    my $csv = Text::CSV->new({ binary => 1 });  # 创建一个新的Text::CSV对象，支持二进制模式
+    open my $fh, '<', $filename or die "Cannot open $filename: $!";  # 打开CSV文件，如果失败则显示错误信息
+    # 逐行读取CSV文件内容
     while (my $row = $csv->getline($fh)) {
-        my ($student_id, $student_name, $teacher_name, $class_id) = @$row;
+        my ($student_id, $student_name, $teacher_name, $class_id) = @$row;  # 将每一行数据解构为学生ID、学生姓名、教师姓名和班级ID
+        # 将学生ID作为键，存储学生的姓名、教师和班级信息到哈希表中
         $students{$student_id} = {
             name => $student_name,
             teacher => $teacher_name,
             class => $class_id,
+            bombID => -1
         };
     }
-
-    close $fh;
-    return %students;
+    close $fh;  # 关闭文件句柄
+    return %students;  # 返回存有学生信息的哈希表
 }
-
 # 在主代码中加载学生信息
-my %STUDENT_INFO = load_student_info();
+my %STUDENT_INFO = load_student_info();  # 调用子程序，加载学生信息到%STUDENT_INFO变量中
 
-
-#
 # Scan the log file and store a complete record for each bomb in the
 # RESULTS hash.
 #
@@ -103,10 +100,10 @@ my %STUDENT_INFO = load_student_info();
 # Open the temporary output Web page
 # 
 
-open(WEB, ">:encoding(UTF-8)", $tmpwebpage) 
+open(WEB, ">:encoding(UTF-8)",$tmpwebpage)
     or log_die("Unable to open $tmpwebpage: $!");
-
-use open ':std', ':encoding(UTF-8)';
+    
+use open ':std',':encoding(UTF-8)';
 
 # Initialize some statistics variables
 $bombcount = 0;                         
@@ -129,21 +126,54 @@ for ($i=0; $i <= $Bomblab::NUMPHASES+1; $i++) {
 # Results{}[4] contains time of last phase pass.
 #
 print_webpage_header();
-foreach $bombid (sort { 
-    $RESULTS{$b}[2] <=> $RESULTS{$a}[2] ||   # 按照解锁的阶段数降序排列
-    $RESULTS{$a}[3] <=> $RESULTS{$b}[3] ||   # 如果阶段数相同，按爆炸次数升序排列
-    $RESULTS{$a}[4] <=> $RESULTS{$b}[4] ||   # 如果爆炸次数相同，按时间升序排列
-    $a <=> $b                                # 如果时间相同，按bombid升序排列
-} keys %RESULTS) {
-    # 获取学生信息
+foreach $student_ID (sort{$a<=>$b}keys %STUDENT_INFO)
+{
+
+    $bombid = $STUDENT_INFO{$student_ID}->{bombID};
+    if ($verbose) {
+        print "Bomb$bombid...";
+    }
+
+    if ($bombid eq "") {
+        next;
+    }
+    
+    my $student_info = $STUDENT_INFO{$student_ID} || {name => 'Unknown', class => 'Unknown', teacher => 'Unknown' };
+    
+    if ($bombid eq "-1") {
+        print WEB "<tr data-class=\"$student_info->{class}\" data-teacher=\"$student_info->{teacher}\" bgcolor=$Bomblab::LIGHT_GREY align=center>\n";
+        print WEB "<td align=center>$bf 0</td>\n"; 
+        print WEB "<td align=left> $bf bomb$bombid $ef</td>";  # bomb number 
+        print WEB "<td align=left>$bf NoRecords$ef </td>\n"; # defusion date
+        
+        # Report the score based on the largest validated defused phase
+        
+        print WEB "<td align=center> $bf 0 $ef</td>";   # defused
+        print WEB "<td align=center> $bf 0 $ef</td>";   # exploded
+        print WEB "<td align=center> $bf 0 $ef</td>";   # lab score
+        print WEB "<td align=center> $bf $student_ID $ef </td>\n";  # valid/invalid
+        print WEB "<td align=center> $bf $student_info->{name} $ef </td>\n";
+        print WEB "<td align=center> $bf $student_info->{class} $ef </td>\n";
+        print WEB "<td align=center> $bf $student_info->{teacher} $ef </td>\n";
+        print WEB "</tr>\n";
+        
+        # Terminate the status line in verbose mode
+        
+        if ($verbose) {
+            print "\n";
+        }
+        next;
+    }
+    
     my $student_id = $RESULTS{$bombid}[0];
-    my $student_info = $STUDENT_INFO{$student_id} || { name => 'Unknown', class => 'Unknown', teacher => 'Unknown' };
+ 
     #
     # Extract the results for this bomb from the results hash
     #
     $numdefused = $RESULTS{$bombid}[2];
     $numexplosions = $RESULTS{$bombid}[3];
     $defusedate = short_date($RESULTS{$bombid}[4]);
+
     #
     # Make sure all the input files we need exist and are accessible
     # Notice that we're validating with the quiet (non-notifying version) 
@@ -159,7 +189,7 @@ foreach $bombid (sort {
         log_msg("Couldn't execute $bombfile");
         next;
     }
-    
+
     # 
     # Copy the defusing strings to a separate array for convenience
     #
@@ -211,22 +241,28 @@ foreach $bombid (sort {
         my $invalid_phase = $numdefused+1;
         $comment = "<font color=ff0000><b>invalid phase $invalid_phase</b></font>";
     }
-    # 生成表格行，包含班级和老师信息的data属性
+    
     print WEB "<tr data-class=\"$student_info->{class}\" data-teacher=\"$student_info->{teacher}\" bgcolor=$Bomblab::LIGHT_GREY align=center>\n";
     print WEB "<td align=center>$bf $bombcount</td>\n"; 
-    print WEB "<td align=left> $bf bomb$bombid $ef</td>"; 
-    print WEB "<td align=left>$bf $defusedate$ef </td>\n"; 
-    print WEB "<td align=center> $bf $RESULTS{$bombid}[2] $ef</td>";
-    print WEB "<td align=center> $bf $RESULTS{$bombid}[3] $ef</td>";
-    print WEB "<td align=center> $bf $score $ef</td>";
-    print WEB "<td align=center> $bf $comment $ef </td>\n";
+    print WEB "<td align=left> $bf bomb$bombid $ef</td>";  # bomb number 
+    print WEB "<td align=left>$bf $defusedate$ef </td>\n"; # defusion date
+
+    # Report the score based on the largest validated defused phase
+    print WEB "<td align=center> $bf $RESULTS{$bombid}[2] $ef</td>";   # defused
+    print WEB "<td align=center> $bf $RESULTS{$bombid}[3] $ef</td>";   # exploded
+    print WEB "<td align=center> $bf $score $ef</td>";   # lab score
+    print WEB "<td align=center> $bf $student_id $ef </td>\n";  # valid/invalid
     print WEB "<td align=center> $bf $student_info->{name} $ef </td>\n";
     print WEB "<td align=center> $bf $student_info->{class} $ef </td>\n";
     print WEB "<td align=center> $bf $student_info->{teacher} $ef </td>\n";
     print WEB "</tr>\n";
-}
 
+    # Terminate the status line in verbose mode
+    if ($verbose) {
+        print "\n";
+    }
 
+} #end iteration over each bombid
 
 #
 # Print the page epilogue information
@@ -416,6 +452,9 @@ sub read_logfile {
                 if $verbose;
             next;
         }
+        
+        $STUDENT_INFO{$userid}->{bombID}=$bombid;
+        
         if (length($string) > $Bomblab::MAXSTRLEN) {
             log_msg("Bomb input string too long in bomblab log line $linenum. Ignored")
                 if $verbose;
@@ -540,6 +579,7 @@ sub usage
 # 
 # print_webpage_header - Print the standard Web page header
 #
+
 sub print_webpage_header {
     my $title = "Bomb Lab Scoreboard";
     $headerhtml = "bgcolor=$Bomblab::DARK_GREY align=center";
@@ -690,15 +730,13 @@ EOF
             <th>Phases Defused</th>
             <th>Explosions</th>
             <th>Score</th>
-            <th>Status</th>
+            <th>Student_id</th>
             <th>Student</th>
             <th>Class</th>
             <th>Teacher</th>
         </tr>
 EOF
 }
-
-
 
 
 	       
