@@ -6,6 +6,10 @@
 
 题目描述：针对《计算机系统基础》课程炸弹程序存在问题，进行程序升级，方便教师对学生的炸弹实验情况及时进行监督和管理。
 
+![Static Badge](https://img.shields.io/badge/build-Perl-green)
+![Static Badge](https://img.shields.io/badge/build-C-green)
+
+
 ## 基本要求
 
 (1)编写程序使教师可以及时通过页面查询班上学生的实验进展情况；   
