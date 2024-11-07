@@ -3,7 +3,7 @@
  * with a jump table. The user has to enter both an index into the table 
  * and a value stored there.
  */
-void phase_5(char *input)
+void phase_3(char *input)
 {
 #if defined(PROBLEM)
     int index, val, x = 0;
@@ -48,6 +48,6 @@ void phase_5(char *input)
 #elif defined(SOLUTION)
     printf("4 POSITIVE_GET\n");
 #else
-    invalid_phase("5a");
+    invalid_phase("3a");
 #endif
 }

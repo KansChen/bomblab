@@ -5,7 +5,7 @@
  * of the table 
  */
 
-void phase_5(char *input)
+void phase_3(char *input)
 {
 #if defined(PROBLEM)
     int index, sum, x = 0;
@@ -43,6 +43,6 @@ void phase_5(char *input)
 #elif defined(SOLUTION)
     printf("3 -POSITIVE_GET\n");
 #else
-    invalid_phase("5b");
+    invalid_phase("3b");
 #endif
 }

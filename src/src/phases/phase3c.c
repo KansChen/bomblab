@@ -4,7 +4,7 @@
  * and the character stored at that position in the table as well
  * as a number to be compared. 
  */
-void phase_5(char *input) 
+void phase_3(char *input) 
 {
 #if defined(PROBLEM)
     int index, num, numScanned = 0;
@@ -76,7 +76,7 @@ void phase_5(char *input)
 #elif defined(SOLUTION)
     printf("5 LETTER_GET POSITIVE_GET\n");
 #else
-    invalid_phase("5c");
+    invalid_phase("3c");
 #endif
 }
 

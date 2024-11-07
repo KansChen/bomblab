@@ -14,239 +14,140 @@
 int bomb_id = 1;
 
 /* Global userid */
-char userid[] = "1234";
+char userid[] = "1";
 
 /* Global user_password */
-char user_password[] = "jhWFeSrurHMmNlThtZxo";
+char user_password[] = "e5Ru2N7cRpZ3rsp2fU1j";
 
 /* 
- * phase1c.c - The user's input must match the specified string 
+ * phase1b.c - The user's input must match the specified string 
  */
 void phase_1(char *input)
 {
 #if defined(PROBLEM)
-    if (strings_not_equal(input, "I am the mayor. I can do anything I want.") != 0)
+    if (strings_not_equal(input, "Crikey! I have lost my mojo!") != 0)
 	explode_bomb();
 #elif defined(SOLUTION)
-    printf("I am the mayor. I can do anything I want.\n");
+    printf("Crikey! I have lost my mojo!\n");
 #else
-    invalid_phase("1c");
+    invalid_phase("1b");
 #endif
 }
+
 /* 
- * phase2a.c - To defeat this stage the user must enter a sequence of 
- * 6 nonnegative numbers where x[i] = x[i-1] + i
+ * phase2b.c - To defeat this stage the user must enter the geometric
+ * sequence starting at 1, with a factor of 2 between each number
  */
 void phase_2(char *input)
 {
 #if defined(PROBLEM)
     int i;
     int numbers[6];
-
+    
     read_six_numbers(input, numbers);
-
-    if (numbers[0] < 0)
+    
+    if (numbers[0] != 1)
 	explode_bomb();
 
     for(i = 1; i < 6; i++) {
-	if (numbers[i] != numbers[i - 1] + i)
+	if (numbers[i] != numbers[i-1] * 2)
 	    explode_bomb();
     }
 #elif defined(SOLUTION)
-    printf("2 3 5 8 12 17\n");
+    printf("1 2 4 8 16 32\n");
 #else
-    invalid_phase("2a");
+    invalid_phase("2b");
 #endif
 }
-/* 
- * phase3b.c - A long switch statement that the compiler should
- * implement with a jump table. The user must enter both an index 
- * into the table and the sum accumulated by falling through the rest 
- * of the table 
- */
-
 void phase_3(char *input)
 {
+#if(defined(PROBLEM))
+    int number=0;
+    number=atoi(input);
+    if(number!=0x3b)
+        explode_bomb();
+#elif defined(SOLUTION)
+    printf("59\n");
+#else
+    invalid_phase("3a");
+#endif
+}void phase_4(char *input)
+{
+#if(defined(PROBLEM))
+    int a=0,b=0;
+    a=atoi(input);
+    b=0xb4;
+    if(a+b!=200)
+        explode_bomb();
+#elif defined(SOLUTION)
+    printf("20\n");
+#else
+    invalid_phase("4b");
+#endif
+}/* 
+ * phase3a.c - A long switch statement that the compiler should implement
+ * with a jump table. The user has to enter both an index into the table 
+ * and a value stored there.
+ */
+void phase_5(char *input)
+{
 #if defined(PROBLEM)
-    int index, sum, x = 0;
+    int index, val, x = 0;
     int numScanned = 0;
 
-    numScanned = sscanf(input, "%d %d", &index, &sum);
+    numScanned = sscanf(input, "%d %d", &index, &val);
 
     if (numScanned < 2)
 	explode_bomb();
 
     switch(index) {
     case 0:
-	x = x + 337;
+	x = 973;
+	break;
     case 1:
-	x = x - 843;
+	x = 64;
+	break;
     case 2:
-	x = x + 913;
+	x = 808;
+	break;
     case 3:
-	x = x - 610;
+	x = 924;
+	break;
     case 4:
-	x = x + 610;
+	x = 206;
+	break;
     case 5:
-	x = x - 610;
+	x = 195;
+	break;
     case 6:
-	x = x + 610;
+	x = 490;
+	break;
     case 7:
-	x = x - 610;
+	x = 387;
 	break;
     default:
 	explode_bomb();
     }
 
-    if ((index > 5) || (x != sum))
+    if (x != val)
 	explode_bomb();
 #elif defined(SOLUTION)
-    printf("3 -610\n");
-#else
-    invalid_phase("3b");
-#endif
-}
-/* 
- * phase4a.c - A recursive binary search function to sort out.  The
- * search is over the indexes [0..14] of a binary search tree, where
- * root=7, root->left=3, root->right=11, and so on. The user must
- * predict the sum of the indexes that will be visited during the
- * search for a particular target index, and must input both the sum
- * and the target index.
- */
-int func4(int val, int low, int high)
-{
-    int mid;
-
-    mid = low + (high - low) / 2;
-
-    if (mid > val)
-	return func4(val, low, mid-1) + mid;
-    else if (mid < val)
-	return func4(val, mid+1, high) + mid;
-    else
-	return mid;
-}
-
-
-void phase_4(char *input) {
-#if defined(PROBLEM)
-    int user_val, user_sum, result, target_sum, numScanned;
-
-    numScanned = sscanf(input, "%d %d", &user_val, &user_sum);
-    if ((numScanned != 2) || user_val < 0 || user_val > 14) {
-	explode_bomb();
-    }
-
-    target_sum = 35; 
-    result = func4(user_val, 0, 14);
-
-    if (result != target_sum || user_sum != target_sum) {
-	explode_bomb();
-    }
-#elif defined(SOLUTION)
-    int i;
-    int target_sum = 35;
-    
-    for (i=0; i<15; i++) { 
-	if (target_sum == func4(i, 0, 14))
-	    break;
-    }
-	printf("%d %d %s\n", i, target_sum, SECRET_PHRASE);
-#else
-    invalid_phase("4a");
-#endif
-}
-
-/* 
- * phase5a.c - Just to be hairy, this traverses a loop of pointers and 
- * counts its length.  The input determines where in the loop we begin. 
- * Just to make sure the user isn't guessing, we make them input the sum of
- * the pointers encountered along the path, too.
- */
-void phase_5(char *input)
-{
-#if defined(PROBLEM)
-    static int array[] = {
-      10,
-      2,
-      14,
-      7,
-      8,
-      12,
-      15,
-      11,
-      0,
-      4,
-      1,
-      13,
-      3,
-      9,
-      6,
-      5
-    };
-
-    int count, sum;
-    int start;
-    int p, result;
-    int numScanned;
-
-    numScanned = sscanf(input, "%d %d", &p, &result);
-    
-    if (numScanned < 2)
-      explode_bomb();
-
-    p = p & 0x0f;
-    start = p; /* debug */
-
-    count = 0;
-    sum = 0;
-    while(p != 15) {
-	count++;
-	p = array[p];
-	sum += p;
-    }
-
-    if ((count != 15) || (sum != result))
-	explode_bomb();
-#elif defined(SOLUTION)
-    switch (15) {
-    case 1: printf("6 15"); break;
-    case 2: printf("14 21"); break;
-    case 3: printf("2 35"); break;
-    case 4: printf("1 37"); break;
-    case 5: printf("10 38"); break;
-    case 6: printf("0 48"); break;
-    case 7: printf("8 48"); break;
-    case 8: printf("4 56"); break;
-    case 9: printf("9 60"); break;
-    case 10: printf("13 69"); break;
-    case 11: printf("11 82"); break;
-    case 12: printf("7 93"); break;
-    case 13: printf("3 100"); break;
-    case 14: printf("12 103"); break;
-    case 15: printf("5 115"); break;
-    default:
-	printf("ERROR: bad count value in phase5a\n");
-	exit(8);
-    }
-    printf("\n");
+    printf("4 206\n");
 #else
     invalid_phase("5a");
 #endif
 }
-
 /* 
- * phase6a.c - The user has to enter the node numbers (from 1 to 6) in 
- * the order that they will occur when the list is sorted in ascending
- * order.
+ * phase6b.c - The user has to enter the permutation vector that
+ * sorts a list in ascending order. The catch here is that the 
+ * code inverts the permutation and checks for descending order.
  */
-listNode node6 = {362, 6, NULL};
-listNode node5 = {967, 5, &node6};
-listNode node4 = {365, 4, &node5};
-listNode node3 = {999, 3, &node4};
-listNode node2 = {718, 2, &node3};
-listNode node1 = {697, 1, &node2};
+listNode node6 = {196, 6, NULL};
+listNode node5 = {932, 5, &node6};
+listNode node4 = {443, 4, &node5};
+listNode node3 = {589, 3, &node4};
+listNode node2 = {954, 2, &node3};
+listNode node1 = {805, 1, &node2};
 
 #if defined(SOLUTION)
 /* Sort list in ascending order */
@@ -263,7 +164,7 @@ listNode *fun6(listNode *start)
 	r = head;
 	q = head;
 
-	while ((r != NULL) && (r->value < p->value)) {
+	while ((r != NULL) && (r->value > p->value)) {
 	    q = r;
 	    r = r->next;
 	}
@@ -305,6 +206,11 @@ void phase_6(char *input)
 	}
     }
 
+    /* Reverse the permutation */
+    for (i = 0; i < 6; i++) {
+	indices[i] = 7 - indices[i];
+    }
+
     /* Rearrange the list according to the user input */
     for (i = 0; i < 6; i++) {
 	p = start;
@@ -322,14 +228,14 @@ void phase_6(char *input)
     }
     p->next = NULL;
 
-    /* Now see if the list is sorted in ascending order*/
+    /* Now see if the list is sorted in descending order*/
     p = start;
     for (i = 0; i < 5; i++) {
-	if (p->value > p->next->value)
+	if (p->value < p->next->value)
 	    explode_bomb();
+	
 	p = p->next;
     }
-
 #elif defined(SOLUTION)
     listNode *start = &node1;
     listNode *p;
@@ -337,15 +243,15 @@ void phase_6(char *input)
     /* sort */
     start = fun6(start);
 
-    /* emit the node indices of the sorted list */
+    /* emit the (inverted) node indices of the sorted list */
     p = start;
     while (p) {
-	printf("%d ", p->index);
+	printf("%d ", 7 - p->index);
 	p = p->next;
     }
     printf("\n");
 #else
-    invalid_phase("6a");
+    invalid_phase("6b");
 #endif
 }
 
@@ -415,14 +321,14 @@ void secret_phase()
     path = fun7(&n1, target);
 
     /* Compare the retrieved path to a random path */
-    if (path != 7)
+    if (path != 3)
 	explode_bomb();
   
     printf("Wow! You've defused the secret stage!\n");
 
     phase_defused();
 #elif defined(SOLUTION)
-    int path = 7;
+    int path = 3;
     treeNode *node = &n1;
     
     node = (path    & 0x1) ? node->right : node->left;
