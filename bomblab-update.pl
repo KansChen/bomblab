@@ -126,7 +126,7 @@ for ($i=0; $i <= $Bomblab::NUMPHASES+1; $i++) {
 # Results{}[4] contains time of last phase pass.
 #
 print_webpage_header();
-foreach $student_ID (sort{$a<=>$b}keys %STUDENT_INFO)
+foreach $student_ID (sort{substr($a,1) <=>substr($b,1)}keys %STUDENT_INFO)
 {
 
     $bombid = $STUDENT_INFO{$student_ID}->{bombID};
