@@ -309,7 +309,7 @@ while (1) {
         # NEW FEATURE: Check if the student ID and name match the records
         #
         my $is_valid_user = 0;
-        my $csv_file = 'name_list1.csv';
+        my $csv_file = 'name_list_zy.csv';
 
         if (-e $csv_file) {
             my $csv = Text::CSV->new({ binary => 1 });
